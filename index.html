@@ -1,89 +1,151 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tra cứu thí sinh</title>
+    <title>Student Lookup</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #007bff;
             text-align: center;
             padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
             background: white;
             padding: 20px;
             max-width: 400px;
-            margin: auto;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
             border-radius: 10px;
+            border: 2px solid #0056b3;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
         }
-        input {
-            width: 100%;
+        input, button {
+            width: calc(100% - 20px);
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
         }
         button {
-            background: #007bff;
+            background: #0056b3;
             color: white;
-            padding: 10px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            width: 100%;
+            transition: background 0.3s ease;
         }
         button:hover {
-            background: #0056b3;
+            background: #003d80;
         }
         .result {
             margin-top: 20px;
             text-align: left;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .result.show {
+            opacity: 1;
         }
         .highlight {
             font-weight: bold;
-            color: #007bff;
+            color: #0056b3;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #0056b3;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Tra cứu thí sinh</h2>
-        <input type="text" id="studentID" placeholder="Nhập ID thí sinh">
-        <button onclick="searchStudent()">Tra cứu</button>
+        <h2>Student Lookup</h2>
+        <input type="text" id="studentID" placeholder="Enter Student ID" maxlength="10" oninput="validateInput(this)">
+        <button onclick="searchStudent()">Search</button>
+        <div class="error" id="error"></div>
+        <div class="loading" id="loading">Searching...</div>
         <div class="result" id="result"></div>
     </div>
     
     <script>
-        async function searchStudent() {
-            const studentID = document.getElementById("studentID").value.trim();
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = "Đang tìm kiếm...";
-
+        let studentMap = {};
+        async function loadStudentData() {
             try {
                 const response = await fetch("https://raw.githubusercontent.com/quan-gn/sat/main/data.json");
                 const data = await response.json();
-                const student = data.find(s => String(s.ID) === studentID);
+                studentMap = data.reduce((map, student) => {
+                    map[student.ID] = student;
+                    return map;
+                }, {});
+            } catch (error) {
+                console.error("Error loading data!", error);
+            }
+        }
+        
+        function validateInput(input) {
+            input.value = input.value.replace(/\D/g, '');
+            const errorDiv = document.getElementById("error");
+            const resultDiv = document.getElementById("result");
+            if (input.value.length > 0 && input.value.length < 10) {
+                errorDiv.innerHTML = "ID must be exactly 10 digits!";
+            } else {
+                errorDiv.innerHTML = "";
+            }
+            if (input.value.length === 0) {
+                resultDiv.innerHTML = "";
+                resultDiv.classList.remove("show");
+            }
+        }
 
+        function searchStudent() {
+            const studentID = document.getElementById("studentID").value.trim();
+            const errorDiv = document.getElementById("error");
+            const resultDiv = document.getElementById("result");
+            const loadingDiv = document.getElementById("loading");
+            resultDiv.innerHTML = "";
+            resultDiv.classList.remove("show");
 
+            if (studentID.length !== 10) {
+                errorDiv.innerHTML = "ID must be exactly 10 digits!";
+                return;
+            }
+            errorDiv.innerHTML = "";
+            loadingDiv.style.display = "block";
+            
+            setTimeout(() => {
+                loadingDiv.style.display = "none";
+                const student = studentMap[studentID];
                 if (student) {
                     resultDiv.innerHTML = `
                         <p><span class="highlight">ID:</span> ${student.ID}</p>
-                        <p><span class="highlight">Tên:</span> ${student.Name}</p>
-                        <p><span class="highlight">Phòng thi:</span> ${student["Test Room"]}</p>
-                        <p><span class="highlight">Địa điểm:</span> ${student["Test Location"]}</p>
-                        <p><span class="highlight">Tầng:</span> ${student.Floor}</p>
-                        <p><span class="highlight">Ngày thi:</span> ${student["Test Date"]}</p>
+                        <p><span class="highlight">Name:</span> ${student.Name}</p>
+                        <p><span class="highlight">Test Room:</span> ${student["Test Room"]}</p>
+                        <p><span class="highlight">Test Location:</span> ${student["Test Location"]}</p>
+                        <p><span class="highlight">Floor:</span> ${student.Floor}</p>
+                        <p><span class="highlight">Test Date:</span> ${student["Test Date"]}</p>
                     `;
+                    resultDiv.classList.add("show");
                 } else {
-                    resultDiv.innerHTML = "<p style='color:red;'>Không tìm thấy thí sinh!</p>";
+                    resultDiv.innerHTML = "<p style='color:red;'>Student not found!</p>";
+                    resultDiv.classList.add("show");
                 }
-            } catch (error) {
-                resultDiv.innerHTML = "<p style='color:red;'>Lỗi khi tải dữ liệu!</p>";
-            }
+            }, 300);
         }
+        
+        loadStudentData();
     </script>
 </body>
 </html>
