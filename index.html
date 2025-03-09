@@ -65,7 +65,8 @@
             try {
                 const response = await fetch("https://raw.githubusercontent.com/quan-gn/sat/main/data.json");
                 const data = await response.json();
-                const student = data.find(s => s.ID === studentID);
+                const student = data.find(s => String(s.ID) === studentID);
+
 
                 if (student) {
                     resultDiv.innerHTML = `
