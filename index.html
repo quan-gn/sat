@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu thí sinh</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 400px; text-align: center; }
+        h2 { color: #0056b3; }
+        input, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 16px; }
+        button { background-color: #0056b3; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #003d80; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 5px; background: #e3f2fd; display: none; text-align: left; }
+        .result p { margin: 5px 0; font-size: 16px; }
+        .result strong { color: #0056b3; }
+        .error { color: red; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Tra cứu thí sinh</h2>
+        <input type="text" id="studentID" placeholder="Nhập ID thí sinh" onkeypress="handleEnter(event)">
+        <button onclick="searchStudent()">Tìm kiếm</button>
+        <div class="result" id="result"></div>
+        <p class="error" id="error"></p>
+    </div>
+
+    <script>
+        let studentData = {}; // Lưu dữ liệu JSON
+
+        // 🛠️ Tải dữ liệu JSON từ Google Drive (hoặc GitHub, Firebase)
+        fetch("https://yourwebsite.com/data.json") // 🔄 Thay bằng link file JSON thật
+            .then(response => response.json())
+            .then(data => { studentData = data; })
+            .catch(error => console.error("Không thể tải dữ liệu", error));
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                searchStudent();
+            }
+        }
+
+        function searchStudent() {
+            var studentID = document.getElementById("studentID").value.trim();
+            var resultDiv = document.getElementById("result");
+            var errorDiv = document.getElementById("error");
+            
+            if (!studentID) {
+                errorDiv.innerHTML = "⚠️ Vui lòng nhập ID!";
+                resultDiv.style.display = "none";
+                return;
+            }
+
+            errorDiv.innerHTML = "";
+            let student = studentData[studentID];
+            
+            if (student) {
+                resultDiv.innerHTML = `
+                    <p><strong>Họ tên:</strong> ${student.name}</p>
+                    <p><strong>Phòng thi:</strong> ${student.testRoom}</p>
+                    <p><strong>Địa điểm:</strong> ${student.testLocation}</p>
+                    <p><strong>Tầng:</strong> ${student.floor}</p>
+                    <p><strong>Ngày thi:</strong> ${student.testDate}</p>
+                `;
+                resultDiv.style.display = "block";
+            } else {
+                errorDiv.innerHTML = "❌ Không tìm thấy ID!";
+                resultDiv.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+</html>
